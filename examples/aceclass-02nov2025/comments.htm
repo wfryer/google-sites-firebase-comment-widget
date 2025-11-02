@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kindle Quotes Feedback Dashboard (Secure)</title>
+  <title>Kindle Quotes Feedback Dashboard (Secure v2)</title>
   <style>
     body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
     .project { background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
@@ -12,22 +12,23 @@
   </style>
 </head>
 <body>
-  <h1>Kindle Quotes Feedback Dashboard (Secure)</h1>
+  <h1>Kindle Quotes Feedback Dashboard (Secure v2)</h1>
   <div id="allProjects"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } 
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } 
       from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
     const firebaseConfig = {
-  "apiKey": "AIzaSyCfNoDplOvDKd8XuUlBDHC6a0jvBxkwGJc",
-  "authDomain": "aceclass-02nov2025.firebaseapp.com",
-  "projectId": "aceclass-02nov2025",
-  "storageBucket": "aceclass-02nov2025.firebasestorage.app",
-  "messagingSenderId": "114256314323",
-  "appId": "1:114256314323:web:4960ec610422a0e1f0f926"
-};
+      apiKey: "AIzaSyCfNoDplOvDKd8XuUlBDHC6a0jvBxkwGJc",
+      authDomain: "aceclass-02nov2025.firebaseapp.com",
+      projectId: "aceclass-02nov2025",
+      storageBucket: "aceclass-02nov2025.firebasestorage.app",
+      messagingSenderId: "114256314323",
+      appId: "1:114256314323:web:4960ec610422a0e1f0f926"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -48,7 +49,7 @@
         div.innerHTML = `<h2>📖 Quote ${projectId}</h2>`;
         comments.forEach(comment => {
           div.innerHTML += `<div class='comment'><strong>${comment.name} (${comment.location})</strong><br>${comment.text}<br>
-          <div class='timestamp'>${new Date(comment.timestamp).toLocaleString()}</div>
+          <div class='timestamp'>🕒 ${new Date(comment.timestamp).toLocaleString()}</div>
           <button data-id='${comment.id}'>🗑 Delete</button></div>`;
         });
         container.appendChild(div);
@@ -58,12 +59,16 @@
         btn.addEventListener("click", async (e) => {
           const adminCode = prompt("Enter admin password to delete:");
           if (!adminCode) return;
+          const docId = e.target.dataset.id;
           try {
-            await updateDoc(doc(db, "comments", e.target.dataset.id), {
+            // Step 1: Mark for deletion
+            await updateDoc(doc(db, "comments", docId), {
+              markedForDeletion: true,
               accessCode: adminCode
             });
-            await deleteDoc(doc(db, "comments", e.target.dataset.id));
-            alert("Comment deleted.");
+            // Step 2: Delete the document
+            await deleteDoc(doc(db, "comments", docId));
+            alert("Comment deleted successfully.");
             location.reload();
           } catch (error) {
             alert("Delete failed: " + error.message);
