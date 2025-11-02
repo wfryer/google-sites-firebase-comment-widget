@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kindle Quotes Feedback (Secure)</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #fafafa; }
+    input, textarea, button { display:block; width:100%; max-width:500px; margin-top:10px; padding:8px; }
+    .comment { background:#fff; border:1px solid #ddd; border-radius:5px; padding:10px; margin-top:10px; }
+    .timestamp { font-size:0.8em; color:#666; }
+  </style>
+</head>
+<body>
+  <h2 id="projectTitle">Kindle Quote Feedback (Secure)</h2>
+  <form id="feedbackForm">
+    <input type="text" id="firstName" placeholder="Your Name" required>
+    <input type="text" id="userLocation" placeholder="Your Location" required>
+    <textarea id="commentText" placeholder="Your Comment" rows="4" required></textarea>
+    <input type="password" id="classPassword" placeholder="Password (ask facilitator)" required>
+    <button type="submit">Submit Feedback</button>
+  </form>
+  <div id="comments"><h3>Previous Comments:</h3></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, onSnapshot } 
+      from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+  "apiKey": "AIzaSyCfNoDplOvDKd8XuUlBDHC6a0jvBxkwGJc",
+  "authDomain": "aceclass-02nov2025.firebaseapp.com",
+  "projectId": "aceclass-02nov2025",
+  "storageBucket": "aceclass-02nov2025.firebasestorage.app",
+  "messagingSenderId": "114256314323",
+  "appId": "1:114256314323:web:4960ec610422a0e1f0f926"
+};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId') || 'unknown';
+    document.getElementById("projectTitle").innerText = "Kindle Quote " + projectId;
+
+    const feedbackForm = document.getElementById("feedbackForm");
+    feedbackForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = firstName.value.trim();
+      const location = userLocation.value.trim();
+      const text = commentText.value.trim();
+      const password = classPassword.value.trim(); // no validation here, Firestore checks it
+      try {
+        await addDoc(collection(db, "comments"), {
+          name, location, text, projectId,
+          accessCode: password,
+          timestamp: new Date().toISOString()
+        });
+        feedbackForm.reset();
+      } catch (error) {
+        alert("Error submitting comment: " + error.message);
+      }
+    });
+
+    const q = query(collection(db, "comments"), where("projectId", "==", projectId));
+    onSnapshot(q, (snapshot) => {
+      const div = document.getElementById("comments");
+      div.innerHTML = "<h3>Previous Comments:</h3>";
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        div.innerHTML += `<div class='comment'><strong>${data.name} (${data.location})</strong><br>${data.text}<br>
+        <div class='timestamp'>🕒 ${new Date(data.timestamp).toLocaleString()}</div></div>`;
+      });
+    });
+  </script>
+</body>
+</html>
