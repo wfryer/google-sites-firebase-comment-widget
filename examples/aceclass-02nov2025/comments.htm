@@ -3,17 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kindle Quotes Feedback Dashboard (Secure v2)</title>
+  <title>ACE Class Comments on Book Quotations - 2 Nov 2025</title>
   <style>
     body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
     .project { background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     .comment { background:#fafafa; border:1px solid #ddd; padding:10px; margin-top:8px; border-radius:5px; }
     button { margin-top:5px; background:#d9534f; color:white; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; }
+    .modal { display:none; position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; overflow:auto;
+             background-color:rgba(0,0,0,0.4); }
+    .modal-content { background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:300px; border-radius:8px; }
+    .modal input { width:100%; padding:8px; margin-top:10px; }
+    .modal button { margin-top:10px; width:100%; }
   </style>
 </head>
 <body>
-  <h1>Kindle Quotes Feedback Dashboard (Secure v2)</h1>
+  <h1>ACE Class Comments on Book Quotations - 2 Nov 2025</h1>
   <div id="allProjects"></div>
+
+  <!-- Password Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <h3>🔒 Enter Admin Password</h3>
+      <input type="password" id="adminPassword" placeholder="Password">
+      <button id="confirmDelete">Confirm Delete</button>
+      <button id="cancelDelete" style="background:#777;">Cancel</button>
+    </div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -31,6 +46,8 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    let targetDocId = null; // track which comment is being deleted
 
     async function loadAllComments() {
       const querySnapshot = await getDocs(collection(db, "comments"));
@@ -55,27 +72,46 @@
         container.appendChild(div);
       }
 
-      document.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const adminCode = prompt("Enter admin password to delete:");
-          if (!adminCode) return;
-          const docId = e.target.dataset.id;
-          try {
-            // Step 1: Mark for deletion
-            await updateDoc(doc(db, "comments", docId), {
-              markedForDeletion: true,
-              accessCode: adminCode
-            });
-            // Step 2: Delete the document
-            await deleteDoc(doc(db, "comments", docId));
-            alert("Comment deleted successfully.");
-            location.reload();
-          } catch (error) {
-            alert("Delete failed: " + error.message);
-          }
+      document.querySelectorAll("button[data-id]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          targetDocId = e.target.dataset.id;
+          openModal();
         });
       });
     }
+
+    // Modal functions
+    const modal = document.getElementById("passwordModal");
+    const confirmBtn = document.getElementById("confirmDelete");
+    const cancelBtn = document.getElementById("cancelDelete");
+
+    function openModal() { modal.style.display = "block"; }
+    function closeModal() { modal.style.display = "none"; document.getElementById("adminPassword").value = ""; }
+
+    cancelBtn.onclick = closeModal;
+
+    confirmBtn.onclick = async () => {
+      const adminCode = document.getElementById("adminPassword").value.trim();
+      if (!adminCode || !targetDocId) return;
+      try {
+        await updateDoc(doc(db, "comments", targetDocId), {
+          markedForDeletion: true,
+          accessCode: adminCode
+        });
+        await deleteDoc(doc(db, "comments", targetDocId));
+        alert("Comment deleted successfully.");
+        closeModal();
+        location.reload();
+      } catch (error) {
+        alert("Delete failed: " + error.message);
+        closeModal();
+      }
+    };
+
+    window.onclick = function(event) {
+      if (event.target == modal) closeModal();
+    };
+
     loadAllComments();
   </script>
 </body>
