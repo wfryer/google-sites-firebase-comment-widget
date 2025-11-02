@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kindle Quotes Feedback Dashboard (Secure)</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
+    .project { background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .comment { background:#fafafa; border:1px solid #ddd; padding:10px; margin-top:8px; border-radius:5px; }
+    button { margin-top:5px; background:#d9534f; color:white; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>Kindle Quotes Feedback Dashboard (Secure)</h1>
+  <div id="allProjects"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } 
+      from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+  "apiKey": "AIzaSyCfNoDplOvDKd8XuUlBDHC6a0jvBxkwGJc",
+  "authDomain": "aceclass-02nov2025.firebaseapp.com",
+  "projectId": "aceclass-02nov2025",
+  "storageBucket": "aceclass-02nov2025.firebasestorage.app",
+  "messagingSenderId": "114256314323",
+  "appId": "1:114256314323:web:4960ec610422a0e1f0f926"
+};
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadAllComments() {
+      const querySnapshot = await getDocs(collection(db, "comments"));
+      const projects = {};
+      querySnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (!projects[data.projectId]) projects[data.projectId] = [];
+        projects[data.projectId].push({ id: docSnap.id, ...data });
+      });
+
+      const container = document.getElementById("allProjects");
+      container.innerHTML = "";
+      for (const [projectId, comments] of Object.entries(projects)) {
+        const div = document.createElement("div");
+        div.classList.add("project");
+        div.innerHTML = `<h2>📖 Quote ${projectId}</h2>`;
+        comments.forEach(comment => {
+          div.innerHTML += `<div class='comment'><strong>${comment.name} (${comment.location})</strong><br>${comment.text}<br>
+          <div class='timestamp'>${new Date(comment.timestamp).toLocaleString()}</div>
+          <button data-id='${comment.id}'>🗑 Delete</button></div>`;
+        });
+        container.appendChild(div);
+      }
+
+      document.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const adminCode = prompt("Enter admin password to delete:");
+          if (!adminCode) return;
+          try {
+            await updateDoc(doc(db, "comments", e.target.dataset.id), {
+              accessCode: adminCode
+            });
+            await deleteDoc(doc(db, "comments", e.target.dataset.id));
+            alert("Comment deleted.");
+            location.reload();
+          } catch (error) {
+            alert("Delete failed: " + error.message);
+          }
+        });
+      });
+    }
+    loadAllComments();
+  </script>
+</body>
+</html>
