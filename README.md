@@ -159,8 +159,8 @@ Each unique `projectId` creates a separate comment thread.
 ## 🧑‍🏫 Live Classroom Example
 
 **ACE Class Comments on Book Quotations (Nov 2, 2025)**  
-Deployed via GitHub Pages using these templates:  
-[https://wfryer.github.io/google-sites-firebase-comment-widget/examples/aceclass-02nov2025/](https://wfryer.github.io/google-sites-firebase-comment-widget/examples/aceclass-02nov2025/)
+Deployed via GitHub Pages for this lesson (A Google Sites website - HTML pages hosted via GitHub pages:  
+[https://followjesus.wesfryer.com/classes/2022-present-ace-sunday-school/budde-chapter1](https://followjesus.wesfryer.com/classes/2022-present-ace-sunday-school/budde-chapter1)
 
 ---
 
@@ -183,7 +183,7 @@ You may freely use, modify, and share it for educational or personal projects.
 
 ## 🙌 Credit and Collaboration
 
-This project was created by **[Wesley A. Fryer](https://www.wesfryer.com/)**.  
+This project was created by **[Wes Fryer](https://www.wesfryer.com/)** of Charlotte, NC.  
 Developed collaboratively through a “vibe coding” process with **ChatGPT‑5 (OpenAI)** and **Google Gemini**, combining iterative design, debugging, and documentation.  
 
 Learn more and find related resources at **[ai.wesfryer.com](https://ai.wesfryer.com)**.
