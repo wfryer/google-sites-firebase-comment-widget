@@ -12,7 +12,7 @@ It allows students, participants, or community members to post comments — and 
 - **Firestore Rules** enforce password security server‑side (no visible credentials in the HTML)  
 - **GitHub Pages** hosting supported — no special server setup required  
 
-This system was designed and field‑tested in a real classroom by **Wesley A. Fryer** and is ideal for teachers exploring “vibe coding” and AI‑assisted development.
+This system was designed and field‑tested by [**Wes Fryer**](https://ai.wesfryer.com) and is ideal for teachers exploring “vibe coding” and AI‑assisted development.
 
 ---
 
@@ -77,6 +77,32 @@ service cloud.firestore {
 Replace `"CLASS_PASSWORD"` and `"ADMIN_PASSWORD"` with your chosen values (for example: `"easter"` and `"easteradmin"`).
 
 Then click **Publish**.
+
+---
+
+### ✏️ 3.5 Add Your Firebase Config to Both HTML Files
+
+After publishing your rules, open both **`index.htm`** and **`comments.htm`** in a text editor (VS Code, Notepad++, etc.)  
+and find this line:
+
+```js
+const firebaseConfig = YOUR_FIREBASE_CONFIG_HERE;
+```
+
+Replace it with your Firebase config object from **Project Settings → Web App**, for example:
+
+```js
+const firebaseConfig = {
+  apiKey: "AIzaSy...yourKey...",
+  authDomain: "yourproject.firebaseapp.com",
+  projectId: "yourproject",
+  storageBucket: "yourproject.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcd1234"
+};
+```
+
+⚠️ You must paste this config in **both** `index.htm` and `comments.htm` before uploading them to GitHub Pages.
 
 ---
 
