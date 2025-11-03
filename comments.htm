@@ -3,35 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>All Comments Dashboard</title>
+  <title>Firebase Comments Dashboard (Secure Template)</title>
   <style>
     body { font-family: Arial, sans-serif; background:#f4f4f4; padding:20px; }
     .project { background:#fff; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     .comment { background:#fafafa; border:1px solid #ddd; padding:10px; margin-top:8px; border-radius:5px; }
     button { margin-top:5px; background:#d9534f; color:white; border:none; padding:6px 10px; cursor:pointer; border-radius:4px; }
+    .modal { display:none; position:fixed; z-index:1; left:0; top:0; width:100%; height:100%; overflow:auto;
+             background-color:rgba(0,0,0,0.4); }
+    .modal-content { background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:300px; border-radius:8px; }
+    .modal input { width:100%; padding:8px; margin-top:10px; }
+    .modal button { margin-top:10px; width:100%; }
   </style>
 </head>
 <body>
-  <h1>All Project Feedback</h1>
+  <h1>Firebase Comments Dashboard (Secure Template)</h1>
+  <p>This page shows all comments grouped by projectId and allows secure deletion 
+     via admin password (checked server-side in Firestore Rules).</p>
+
   <div id="allProjects"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, deleteDoc, doc } 
-      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <h3>🔒 Enter Admin Password</h3>
+      <input type="password" id="adminPassword" placeholder="Password">
+      <button id="confirmDelete">Confirm Delete</button>
+      <button id="cancelDelete" style="background:#777;">Cancel</button>
+    </div>
+  </div>
 
-    // Replace with your own Firebase config
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "###########",
-      appId: "APP_ID"
-    };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } 
+      from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+    const firebaseConfig = YOUR_FIREBASE_CONFIG_HERE;
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    let targetDocId = null;
 
     async function loadAllComments() {
       const querySnapshot = await getDocs(collection(db, "comments"));
@@ -47,26 +57,60 @@
       for (const [projectId, comments] of Object.entries(projects)) {
         const div = document.createElement("div");
         div.classList.add("project");
-        div.innerHTML = `<h2>🧱 ${projectId}</h2>`;
+        div.innerHTML = `<h2>📖 Project ${projectId}</h2>`;
         comments.forEach(comment => {
-          div.innerHTML += `<div class="comment"><strong>${comment.name} (${comment.section})</strong><br>${comment.text}<br>
-          <div class="timestamp">${new Date(comment.timestamp).toLocaleString()}</div>
-          <button data-id="${comment.id}">🗑 Delete</button></div>`;
+          div.innerHTML += `<div class='comment'><strong>${comment.name} (${comment.location})</strong><br>${comment.text}<br>
+          <div class='timestamp'>🕒 ${new Date(comment.timestamp).toLocaleString()}</div>
+          <button data-id='${comment.id}'>🗑 Delete</button></div>`;
         });
         container.appendChild(div);
       }
 
-      document.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          const confirmPwd = prompt("Enter admin password to delete:");
-          if (confirmPwd !== "ADMIN_PASSWORD_HERE") return alert("Incorrect password.");
-          await deleteDoc(doc(db, "comments", e.target.dataset.id));
-          alert("Comment deleted.");
-          location.reload();
+      document.querySelectorAll("button[data-id]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          targetDocId = e.target.dataset.id;
+          openModal();
         });
       });
     }
+
+    const modal = document.getElementById("passwordModal");
+    const confirmBtn = document.getElementById("confirmDelete");
+    const cancelBtn = document.getElementById("cancelDelete");
+
+    function openModal() { modal.style.display = "block"; }
+    function closeModal() { modal.style.display = "none"; document.getElementById("adminPassword").value = ""; }
+
+    cancelBtn.onclick = closeModal;
+
+    confirmBtn.onclick = async () => {
+      const adminCode = document.getElementById("adminPassword").value.trim();
+      if (!adminCode || !targetDocId) return;
+      try {
+        await updateDoc(doc(db, "comments", targetDocId), {
+          markedForDeletion: true,
+          accessCode: adminCode
+        });
+        await deleteDoc(doc(db, "comments", targetDocId));
+        alert("Comment deleted successfully.");
+        closeModal();
+        location.reload();
+      } catch (error) {
+        alert("Delete failed: " + error.message);
+        closeModal();
+      }
+    };
+
+    window.onclick = function(event) {
+      if (event.target == modal) closeModal();
+    };
+
     loadAllComments();
   </script>
+
+  <footer style="margin-top:40px; font-size:0.8em; color:#555;">
+    <p>Developed collaboratively by <strong>Wesley A. Fryer</strong> with assistance from <strong>ChatGPT-5</strong> (OpenAI) and <strong>Google Gemini</strong> in a “vibe coding” process. 
+    Learn more at <a href="https://ai.wesfryer.com" target="_blank">ai.wesfryer.com</a>.</p>
+  </footer>
 </body>
 </html>
